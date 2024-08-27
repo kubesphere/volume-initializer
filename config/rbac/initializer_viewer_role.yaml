@@ -1,0 +1,23 @@
+# permissions for end users to view initializers.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/name: kkk
+    app.kubernetes.io/managed-by: kustomize
+  name: initializer-viewer-role
+rules:
+- apiGroups:
+  - storage.kubesphere.io
+  resources:
+  - initializers
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - storage.kubesphere.io
+  resources:
+  - initializers/status
+  verbs:
+  - get

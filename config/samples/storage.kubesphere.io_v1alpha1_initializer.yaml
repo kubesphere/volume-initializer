@@ -1,0 +1,38 @@
+apiVersion: storage.kubesphere.io/v1alpha1
+kind: Initializer
+metadata:
+  labels:
+    app.kubernetes.io/name: initializer-sample
+    app.kubernetes.io/managed-by: kustomize
+  name: initializer-sample
+spec:
+  enabled: true
+  initContainers:
+  - name: busybox
+    image: busybox:latest
+    command:
+      - sh
+      - '-c'
+      - chmod -R 777 $PVC_1_MOUNT_PATH
+    resources:
+      limits:
+        cpu: 500m
+        memory: 100Mi
+      requests:
+        cpu: 100m
+        memory: 100Mi
+    terminationMessagePath: /dev/termination-log
+    terminationMessagePolicy: File
+    imagePullPolicy: IfNotPresent
+  pvcMatchers:
+  - name: local
+    pvcTemplate:
+      apiVersion: v1
+      kind: PersistentVolumeClaim
+      spec:
+        storageClassName: local-path
+  pvcInitializers:
+  - pvcMatcherName: local
+    initContainerName: busybox
+    mountPathRoot: "/pvc"
+status: {}

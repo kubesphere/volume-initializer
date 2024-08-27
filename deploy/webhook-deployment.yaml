@@ -1,0 +1,119 @@
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingWebhookConfiguration
+metadata:
+  name: "volume-initializer"
+webhooks:
+- name: "volume-initializer"
+  rules:
+  - apiGroups:   [""]
+    apiVersions: ["v1"]
+    operations:  ["CREATE"]
+    resources:   ["pods"]
+    scope:       "*"
+  clientConfig:
+    service:
+      namespace: default
+      name: volume-initializer
+      path: "/pods"
+    caBundle: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSURNekNDQWh1Z0F3SUJBZ0lVUUlBMW96UlhzbHF6VzhFSDQ5bE5qQ2Yrb2xBd0RRWUpLb1pJaHZjTkFRRUwKQlFBd0tURW5NQ1VHQTFVRUF3d2VkbTlzZFcxbExXbHVhWFJwWVd4cGVtVnlMbVJsWm1GMWJIUXVjM1pqTUI0WApEVEkwTURneU56QTNNRFl3TTFvWERUSTBNRGt5TmpBM01EWXdNMW93S1RFbk1DVUdBMVVFQXd3ZWRtOXNkVzFsCkxXbHVhWFJwWVd4cGVtVnlMbVJsWm1GMWJIUXVjM1pqTUlJQklqQU5CZ2txaGtpRzl3MEJBUUVGQUFPQ0FROEEKTUlJQkNnS0NBUUVBb1J1T2F1MnhUcWR6ZnEvRzhZOE1Ga0VtcDNCbjdTdHRDaVVuT1BMZXdOV1U2Rzk0WVJicQpvd0FyV01SWGg0emVZcEVpNk5tWjV1amVDMHBUVHRRdUxrcnFLZlQ2UU5OdXFJSVQwUXV3c2UwR2JtS2ZpRGNSCmpVMlEyMDlMcUpYWjF1VUVkdTZGZDlEbk9hSGZwSDlBOWNTU3lmT0NSdU96TnNJQ2srWEd3K3B0Slo3WjY2ZkwKVnFJVzIvQUR2WFdjY2QwdWFscE02b1ZNMGd5dXdQeGVHSmZkb1FQMTcwYlBhS2tBWGVaNG1RVkxhdHlmZ3JZaQo2M09XR0wyMjF3M3pHNW9FZWZNTHdKQWNDdnNuWWRSTWN5clEvb2JkYnpQRmppY0NXZGFJYUMzZjBHV3FGS1UrCjgwZ3Z2bU8rbEV3N0tsOE85WTU4M2VPMC9Xa1o0UGZmZFFJREFRQUJvMU13VVRBZEJnTlZIUTRFRmdRVXdWbEUKaEo1bVJXRzNZTTJ0RW51d2E2MDhuT2N3SHdZRFZSMGpCQmd3Rm9BVXdWbEVoSjVtUldHM1lNMnRFbnV3YTYwOApuT2N3RHdZRFZSMFRBUUgvQkFVd0F3RUIvekFOQmdrcWhraUc5dzBCQVFzRkFBT0NBUUVBZlFicis4cVRlazhNCi82MzBGNmt6bSs2RVhYajhWU05wU2p6SlNvZ296cnhDTDhoY0lDU2IwLzBmdmJaMCtmNjhrd1lVMlhMekczUTEKRnhPWGF1OFU4YkFkMTcvUXhmYkRNcEdCNC9EckJBUy90TFFiN0ZRQ1JwUElTSDJWa3VkZ2pMd1poSDJrdEpqSgpZQjNZK0ZKbi9uUE50K2prTTQ2dEpxRjBFOGd0YmpkaG5QYXBwUUN3QTEwZ3NUS3dxYkFUOWhZWUV3bTZQanpMCnJ1dFNKRUFRQTNtMVZhODM5cGptZFBGMEVxS3c0ZUVRNkRtOWZDT0dPdDloalRBVUNJR1VzdDdKOWdsSWZjSmMKTDduMmd4NzE0SXVBRTJMUE5VeHlWTTJ2Zm8vRis5SUFyWkxLOFlZQzRGeXlwU2YxSjFkWHZ0WXVqYURTQjljTwpIRHRFT0lXSU93PT0KLS0tLS1FTkQgQ0VSVElGSUNBVEUtLS0tLQo=
+  admissionReviewVersions: ["v1"]
+  sideEffects: None
+  failurePolicy: Ignore
+  timeoutSeconds: 5
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: volume-initializer
+  namespace: default
+  labels:
+    role: controller
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: volume-initializer
+  labels:
+    role: controller
+rules:
+  - apiGroups: [ "" ]
+    resources: [ "namespaces" ]
+    verbs: [ "get", "list", "watch"]
+
+  - apiGroups: [""]
+    resources: ["persistentvolumeclaims"]
+    verbs: ["get", "list", "watch"]
+
+  - apiGroups: ["storage"]
+    resources: ["initializers"]
+    verbs: [ "get", "list", "watch"]
+
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list", "watch", "patch", "update"]
+---
+  kind: ClusterRoleBinding
+  apiVersion: rbac.authorization.k8s.io/v1
+  metadata:
+    name: volume-initializer
+    labels:
+      role: controller
+  subjects:
+    - kind: ServiceAccount
+      name: volume-initializer
+      namespace: default
+  roleRef:
+    kind: ClusterRole
+    name: volume-initializer
+    apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: volume-initializer
+  namespace: default
+  labels:
+    app: volume-initializer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: volume-initializer
+  template:
+    metadata:
+      labels:
+        app: volume-initializer
+    spec:
+      containers:
+      - name: volume-initializer
+        image: stoneshiyunify/volume-initializer:latest
+        imagePullPolicy: Always
+        args: ['--tls-cert-file=/etc/run/certs/tls.crt', '--tls-private-key-file=/etc/run/certs/tls.key']
+        ports:
+        - containerPort: 443
+        volumeMounts:
+          - name: volume-initializer-webhook-certs
+            mountPath: /etc/run/certs
+            readOnly: true
+      volumes:
+        - name: volume-initializer-webhook-certs
+          secret:
+            secretName: volume-initializer
+      serviceAccountName: volume-initializer
+      serviceAccount: volume-initializer
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: volume-initializer
+  namespace: default
+spec:
+  selector:
+    app: volume-initializer
+  ports:
+    - protocol: TCP
+      port: 443
+      targetPort: 443
+
+

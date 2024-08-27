@@ -1,0 +1,4 @@
+## Append samples of your project ##
+resources:
+- storage.kubesphere.io_v1alpha1_initializer.yaml
+# +kubebuilder:scaffold:manifestskustomizesamples
