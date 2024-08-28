@@ -80,7 +80,7 @@ func (a *Admitter) serverPVCRequest(w http.ResponseWriter, r *http.Request) {
 
 func (a *Admitter) Admit(ar admissionv1.AdmissionReview) *admissionv1.AdmissionResponse {
 	if ar.Request.Operation != admissionv1.Create {
-		return nil
+		return toV1AdmissionResponseWithPatch(nil)
 	}
 
 	raw := ar.Request.Object.Raw
@@ -105,12 +105,8 @@ const (
 func (a *Admitter) Decide(ctx context.Context, reqInfo *ReqInfo) *admissionv1.AdmissionResponse {
 	var err error
 
-	if reqInfo == nil || reqInfo.Pod == nil {
-		return nil
-	}
-
-	if len(reqInfo.Pod.Spec.Volumes) == 0 {
-		return nil
+	if reqInfo == nil || reqInfo.Pod == nil || len(reqInfo.Pod.Spec.Volumes) == 0 {
+		return toV1AdmissionResponseWithPatch(nil)
 	}
 
 	initializerList := &v1alpha1.InitializerList{}
@@ -169,7 +165,7 @@ func (a *Admitter) Decide(ctx context.Context, reqInfo *ReqInfo) *admissionv1.Ad
 		return toV1AdmissionResponseWithPatch(patch)
 	}
 
-	return nil
+	return toV1AdmissionResponseWithPatch(nil)
 }
 
 const (

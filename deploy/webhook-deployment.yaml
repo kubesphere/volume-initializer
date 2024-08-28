@@ -1,10 +1,10 @@
 ---
 apiVersion: admissionregistration.k8s.io/v1
-kind: ValidatingWebhookConfiguration
+kind: MutatingWebhookConfiguration
 metadata:
   name: "volume-initializer"
 webhooks:
-- name: "volume-initializer"
+- name: "volume-initializer.storage.kubesphere.io"
   rules:
   - apiGroups:   [""]
     apiVersions: ["v1"]
@@ -87,7 +87,7 @@ spec:
     spec:
       containers:
       - name: volume-initializer
-        image: stoneshiyunify/volume-initializer:latest
+        image: registry.cn-hangzhou.aliyuncs.com/stoneshiyunify/volume-initializer:latest
         imagePullPolicy: Always
         args: ['--tls-cert-file=/etc/run/certs/tls.crt', '--tls-private-key-file=/etc/run/certs/tls.key']
         ports:

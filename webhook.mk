@@ -10,7 +10,7 @@ build-local: ; $(info $(M)...Begin to build  binary.)  @ ## Build .
 
 build-image: ; $(info $(M)...Begin to build  image.)  @ ## Build  image.
 	docker build -f Dockerfile -t ${REPO}/volume-initializer:${TAG}  .
-	docker push ${REPO}/:${TAG}
+	docker push ${REPO}/volume-initializer:${TAG}
 
 build-cross-image: ; $(info $(M)...Begin to build  image.)  @ ## Build  image.
 	docker buildx build -f Dockerfile -t ${REPO}/volume-initializer:${TAG} --push --platform linux/amd64,linux/arm64 .
