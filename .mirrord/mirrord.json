@@ -1,0 +1,16 @@
+{
+    "target": {
+        "path": {
+            "deployment": "volume-initializer"
+        },
+        "namespace": "default"
+    },
+    "feature": {
+        "network": {
+            "incoming": "steal",
+            "outgoing": true
+        },
+        "fs": "read",
+        "env": true
+    }
+}

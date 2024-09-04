@@ -26,11 +26,26 @@ spec:
     imagePullPolicy: IfNotPresent
   pvcMatchers:
   - name: local
-    pvcTemplate:
-      apiVersion: v1
-      kind: PersistentVolumeClaim
-      spec:
-        storageClassName: local-path
+    storageClass:
+      fieldSelector:
+        - key: name
+          operator: In
+          values:
+            - local-path
+            - local-path2
+    namespace:
+      labelSelector:
+        - key: "kubernetes.io/metadata.name"
+          operator: In
+          values:
+            - default
+            - test
+    workspace:
+      fieldSelector:
+        - key: name
+          operator: NotIn
+          values:
+            - ws1
   pvcInitializers:
   - pvcMatcherName: local
     initContainerName: busybox

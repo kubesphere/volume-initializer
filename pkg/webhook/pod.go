@@ -10,9 +10,11 @@ import (
 	"github.com/kubesphere/volume-initializer/pkg/apis/storage/v1alpha1"
 	admissionv1 "k8s.io/api/admission/v1"
 	corev1 "k8s.io/api/core/v1"
+	v1 "k8s.io/api/storage/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/klog/v2"
+	tenantv1alpha1 "kubesphere.io/api/tenant/v1alpha1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 )
@@ -129,7 +131,7 @@ func (a *Admitter) Decide(ctx context.Context, reqInfo *ReqInfo) *admissionv1.Ad
 				return toV1AdmissionResponse(err)
 			}
 			var pvcInitContainer *PVCInitContainer
-			pvcInitContainer, err = getPVCInitContainer(pvc, initializerList)
+			pvcInitContainer, err = a.getPVCInitContainer(ctx, pvc, initializerList)
 			if err != nil {
 				klog.ErrorS(err, "failed to get PVCInitContainer", "pvc", pvc.Name)
 				return toV1AdmissionResponse(err)
@@ -189,7 +191,7 @@ type PVCInitContainer struct {
 	MountPathRoot string
 }
 
-func getPVCInitContainer(pvc *corev1.PersistentVolumeClaim, initializerList *v1alpha1.InitializerList) (*PVCInitContainer, error) {
+func (a *Admitter) getPVCInitContainer(ctx context.Context, pvc *corev1.PersistentVolumeClaim, initializerList *v1alpha1.InitializerList) (*PVCInitContainer, error) {
 	getPvcMatcherByName := func(matcherName string, pvcMatchers []v1alpha1.PVCMatcher) *v1alpha1.PVCMatcher {
 		for _, m := range pvcMatchers {
 			if m.Name == matcherName {
@@ -214,7 +216,11 @@ func getPVCInitContainer(pvc *corev1.PersistentVolumeClaim, initializerList *v1a
 		}
 		for _, pvcInitializer := range initializer.Spec.PVCInitializers {
 			pvcMatcher := getPvcMatcherByName(pvcInitializer.PVCMatcherName, initializer.Spec.PVCMatchers)
-			if pvcMatch(pvc, pvcMatcher) {
+			match, err := a.pvcMatch(ctx, pvc, pvcMatcher)
+			if err != nil {
+				return nil, err
+			}
+			if match {
 				container := getContainerByName(pvcInitializer.InitContainerName, initializer.Spec.InitContainers)
 				if container == nil {
 					continue
@@ -231,6 +237,46 @@ func getPVCInitContainer(pvc *corev1.PersistentVolumeClaim, initializerList *v1a
 	return nil, nil
 }
 
-func pvcMatch(pvc *corev1.PersistentVolumeClaim, matcher *v1alpha1.PVCMatcher) bool {
-	return matcher.PVCTemplate.Spec.StorageClassName == pvc.Spec.StorageClassName
+func (a *Admitter) pvcMatch(ctx context.Context, pvc *corev1.PersistentVolumeClaim, pvcMatcher *v1alpha1.PVCMatcher) (bool, error) {
+	var err error
+
+	if pvcMatcher.StorageClass != nil && pvc.Spec.StorageClassName != nil {
+		sc := &v1.StorageClass{}
+		err = a.client.Get(ctx, types.NamespacedName{Name: *pvc.Spec.StorageClassName}, sc)
+		if err != nil {
+			return false, err
+		}
+		match := pvcMatcher.StorageClass.Match(sc)
+		if !match {
+			return false, nil
+		}
+	}
+
+	ns := &corev1.Namespace{}
+	err = a.client.Get(ctx, types.NamespacedName{Name: pvc.Namespace}, ns)
+	if err != nil {
+		return false, err
+	}
+
+	if pvcMatcher.Namespace != nil {
+		match := pvcMatcher.Namespace.Match(ns)
+		if !match {
+			return false, nil
+		}
+	}
+
+	wsName, ok := ns.Labels["kubesphere.io/workspace"]
+	if ok && pvcMatcher.Workspace != nil {
+		ws := &tenantv1alpha1.Workspace{}
+		err = a.client.Get(ctx, types.NamespacedName{Name: wsName}, ws)
+		if err != nil {
+			return false, err
+		}
+		match := pvcMatcher.Workspace.Match(ws)
+		if !match {
+			return false, nil
+		}
+	}
+
+	return true, nil
 }

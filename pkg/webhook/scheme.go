@@ -7,9 +7,11 @@ import (
 	admissionregistrationv1 "k8s.io/api/admissionregistration/v1"
 	admissionregistrationv1beta1 "k8s.io/api/admissionregistration/v1beta1"
 	corev1 "k8s.io/api/core/v1"
+	storagev1 "k8s.io/api/storage/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
+	tenantv1alpha1 "kubesphere.io/api/tenant/v1alpha1"
 )
 
 var scheme = runtime.NewScheme()
@@ -26,4 +28,6 @@ func addToScheme(scheme *runtime.Scheme) {
 	utilruntime.Must(admissionv1.AddToScheme(scheme))
 	utilruntime.Must(admissionregistrationv1.AddToScheme(scheme))
 	utilruntime.Must(v1alpha1.AddToScheme(scheme))
+	utilruntime.Must(tenantv1alpha1.AddToScheme(scheme))
+	utilruntime.Must(storagev1.AddToScheme(scheme))
 }

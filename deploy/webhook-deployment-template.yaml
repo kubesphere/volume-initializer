@@ -40,15 +40,18 @@ rules:
   - apiGroups: [""]
     resources: ["namespaces"]
     verbs: ["get", "list", "watch"]
-
   - apiGroups: [""]
     resources: ["persistentvolumeclaims"]
     verbs: ["get", "list", "watch"]
-
+  - apiGroups: [""]
+    resources: ["storageclasses"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["tenant.kubesphere.io"]
+    resources: ["workspaces"]
+    verbs: ["get", "list", "watch"]
   - apiGroups: ["storage.kubesphere.io"]
     resources: ["initializers"]
     verbs: ["get", "list", "watch"]
-
   - apiGroups: [""]
     resources: ["pods"]
     verbs: ["get", "list", "watch", "patch", "update"]
@@ -101,7 +104,6 @@ spec:
           secret:
             secretName: volume-initializer
       serviceAccountName: volume-initializer
-      serviceAccount: volume-initializer
 ---
 apiVersion: v1
 kind: Service

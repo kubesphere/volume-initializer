@@ -4,6 +4,8 @@ module github.com/kubesphere/volume-initializer
 
 go 1.22.0
 
+toolchain go1.22.4
+
 require (
 	github.com/fsnotify/fsnotify v1.7.0
 	github.com/onsi/ginkgo/v2 v2.19.0
@@ -14,6 +16,7 @@ require (
 	k8s.io/client-go v0.31.0
 	k8s.io/code-generator v0.0.0-20240727175048-b53d16e2b339
 	k8s.io/klog/v2 v2.130.1
+	kubesphere.io/api v0.0.0-20240509130216-8c539e710f2d
 	sigs.k8s.io/controller-runtime v0.19.0
 )
 
@@ -34,7 +37,7 @@ require (
 	github.com/google/gofuzz v1.2.0 // indirect
 	github.com/google/pprof v0.0.0-20240525223248-4bfdf5a9a2af // indirect
 	github.com/google/uuid v1.6.0 // indirect
-	github.com/imdario/mergo v0.3.6 // indirect
+	github.com/imdario/mergo v0.3.13 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
@@ -65,4 +68,9 @@ require (
 	sigs.k8s.io/json v0.0.0-20221116044647-bc3834ca7abd // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.4.1 // indirect
 	sigs.k8s.io/yaml v1.4.0 // indirect
+)
+
+replace (
+	github.com/projectcalico/api => github.com/kubesphere/calico/api v0.0.0-20230227071013-a73515ddc939 // v3.25.0
+	github.com/projectcalico/calico => github.com/kubesphere/calico v0.0.0-20230227071013-a73515ddc939 // v3.25.0
 )

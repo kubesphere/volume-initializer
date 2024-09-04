@@ -86,7 +86,7 @@ kubectl -n ${namespace} create secret tls volume-initializer \
     --key "${keydir}/webhook-server-tls.key"
 
 ca_pem_b64="$(openssl base64 -A <"${keydir}/ca.crt")"
-cat "${basedir}/webhook-deployment-template" | sed -e 's@${CA_BUNDLE}@'"$ca_pem_b64"'@g' | sed -e 's@${NAMESPACE}@'"$namespace"'@g' | sed -e 's@${SERVICE}@'"$service"'@g' > "${basedir}/webhook-deployment.yaml"
+cat "${basedir}/webhook-deployment-template.yaml" | sed -e 's@${CA_BUNDLE}@'"$ca_pem_b64"'@g' | sed -e 's@${NAMESPACE}@'"$namespace"'@g' | sed -e 's@${SERVICE}@'"$service"'@g' > "${basedir}/webhook-deployment.yaml"
 
 echo "${basedir}/webhook-deployment.yaml generated"
 

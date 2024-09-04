@@ -43,14 +43,29 @@ type InitializerSpec struct {
 }
 
 type PVCInitializer struct {
-	PVCMatcherName    string `json:"pvcMatcherName,omitempty"`
+	// PVCMatcherName represents the name of PVCMatcher
+	PVCMatcherName string `json:"pvcMatcherName,omitempty"`
+
+	// InitContainerName represents the name of the init container
 	InitContainerName string `json:"initContainerName,omitempty"`
-	MountPathRoot     string `json:"mountPathRoot,omitempty"`
+
+	// MountPathRoot represents the root path of the mount point in the init container, default is "/".
+	MountPathRoot string `json:"mountPathRoot,omitempty"`
 }
 
+// PVCMatcher is used to filter PVCs. If no selector is specified, it will match any PVC.
 type PVCMatcher struct {
-	Name        string                       `json:"name,omitempty"`
-	PVCTemplate corev1.PersistentVolumeClaim `json:"pvcTemplate,omitempty"`
+	// Name is the matcher name
+	Name string `json:"name,omitempty"`
+
+	// StorageClass matches the PVC's storage class
+	StorageClass *GenericSelector `json:"storageClass,omitempty"`
+
+	// Namespace matches the PVC's namespace
+	Namespace *GenericSelector `json:"namespace,omitempty"`
+
+	// Workspace matches the PVC's workspace
+	Workspace *GenericSelector `json:"workspace,omitempty"`
 }
 
 type InitializerStatus struct {
