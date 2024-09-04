@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"path"
+	"slices"
 
 	"github.com/kubesphere/volume-initializer/pkg/apis/storage/v1alpha1"
 	admissionv1 "k8s.io/api/admission/v1"
@@ -111,6 +112,11 @@ func (a *Admitter) Decide(ctx context.Context, reqInfo *ReqInfo) *admissionv1.Ad
 		return toV1AdmissionResponseWithPatch(nil)
 	}
 
+	var containerNames []string
+	for _, c := range reqInfo.Pod.Spec.Containers {
+		containerNames = append(containerNames, c.Name)
+	}
+
 	initializerList := &v1alpha1.InitializerList{}
 	err = a.client.List(ctx, initializerList)
 	if err != nil {
@@ -143,6 +149,13 @@ func (a *Admitter) Decide(ctx context.Context, reqInfo *ReqInfo) *admissionv1.Ad
 				pvcInitContainer.MountPathRoot = "/"
 			}
 			container := pvcInitContainer.Container
+			container.Name = fmt.Sprintf("%s-vol-%s", container.Name, volume.Name)
+
+			// check if the container already exists
+			if slices.Contains(containerNames, container.Name) {
+				continue
+			}
+
 			mountPath := path.Join(pvcInitContainer.MountPathRoot, volume.Name)
 			volumeMount := corev1.VolumeMount{
 				Name:      volume.Name,
