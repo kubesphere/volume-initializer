@@ -143,7 +143,7 @@ func (a *Admitter) Decide(ctx context.Context, reqInfo *ReqInfo) *admissionv1.Ad
 				return toV1AdmissionResponse(err)
 			}
 			if pvcInitContainer == nil {
-				klog.Infof("no initContainer found for pvc %s", pvc.Name)
+				klog.Infof("no initContainer matches pvc %s", pvc.Name)
 				continue
 			}
 			if pvcInitContainer.MountPathRoot == "" {

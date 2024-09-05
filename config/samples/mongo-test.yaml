@@ -1,0 +1,80 @@
+kind: StatefulSet
+apiVersion: apps/v1
+metadata:
+  name: mongodb-test
+  labels:
+    app: mongodb-test
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mongodb-test
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: mongodb-test
+    spec:
+      containers:
+        - name: container-tle280
+          image: 'registry.cn-hangzhou.aliyuncs.com/stoneshiyunify/mongodb:4.2.4-debian-10-r0'
+          ports:
+            - name: http-27017
+              containerPort: 27017
+              protocol: TCP
+          resources:
+            limits:
+              cpu: '1'
+              memory: 1Gi
+            requests:
+              cpu: '1'
+              memory: 1Gi
+          volumeMounts:
+            - name: ttt
+              mountPath: /bitnami/ttt
+            - name: mongodb
+              mountPath: /bitnami/mongodb
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          imagePullPolicy: IfNotPresent
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+      dnsPolicy: ClusterFirst
+      serviceAccountName: default
+      serviceAccount: default
+      securityContext: {}
+      schedulerName: default-scheduler
+  volumeClaimTemplates:
+    - kind: PersistentVolumeClaim
+      apiVersion: v1
+      metadata:
+        name: ttt
+        creationTimestamp: null
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 10Gi
+        storageClassName: local-path2
+        volumeMode: Filesystem
+    - kind: PersistentVolumeClaim
+      apiVersion: v1
+      metadata:
+        name: mongodb
+        creationTimestamp: null
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 10Gi
+        storageClassName: local-path
+        volumeMode: Filesystem
+  serviceName: mongodb-u8yi
+  podManagementPolicy: OrderedReady
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      partition: 0
+  revisionHistoryLimit: 10
