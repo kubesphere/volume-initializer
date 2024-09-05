@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: container-tle280
-          image: 'registry.cn-hangzhou.aliyuncs.com/stoneshiyunify/mongodb:4.2.4-debian-10-r0'
+          image: 'bitnami/mongodb:4.2.4-debian-10-r0'
           ports:
             - name: http-27017
               containerPort: 27017

@@ -90,7 +90,7 @@ spec:
     spec:
       containers:
       - name: volume-initializer
-        image: registry.cn-hangzhou.aliyuncs.com/stoneshiyunify/volume-initializer:latest
+        image: kubesphere/volume-initializer:latest
         imagePullPolicy: Always
         args: ['--tls-cert-file=/etc/run/certs/tls.crt', '--tls-private-key-file=/etc/run/certs/tls.key']
         ports:
