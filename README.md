@@ -11,7 +11,7 @@ One typical usecase is using it to change the ownership/permissions of the volum
 
 ## Deploy CRD
 ```
-make install
+kubectl apply -f config/crd/bases
 ```
 
 ## Deploy CR
