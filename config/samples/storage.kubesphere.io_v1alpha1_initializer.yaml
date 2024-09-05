@@ -8,7 +8,7 @@ metadata:
 spec:
   enabled: true
   initContainers:
-  - name: busybox
+  - name: busybox-chmod
     image: busybox:latest
     command:
       - sh
@@ -24,15 +24,30 @@ spec:
     terminationMessagePath: /dev/termination-log
     terminationMessagePolicy: File
     imagePullPolicy: IfNotPresent
+  - name: busybox-chown
+    image: busybox:latest
+    command:
+      - sh
+      - '-c'
+      - chown -R 1001:0 $PVC_1_MOUNT_PATH
+    resources:
+      limits:
+        cpu: 500m
+        memory: 100Mi
+      requests:
+        cpu: 100m
+        memory: 100Mi
+    terminationMessagePath: /dev/termination-log
+    terminationMessagePolicy: File
+    imagePullPolicy: IfNotPresent
   pvcMatchers:
-  - name: local
+  - name: local-1
     storageClass:
       fieldSelector:
         - key: name
           operator: In
           values:
             - local-path
-            - local-path2
     namespace:
       labelSelector:
         - key: "kubernetes.io/metadata.name"
@@ -46,8 +61,17 @@ spec:
           operator: NotIn
           values:
             - ws1
+  - name: local-2
+    storageClass:
+      fieldSelector:
+        - key: name
+          operator: In
+          values:
+            - local-path2
   pvcInitializers:
-  - pvcMatcherName: local
-    initContainerName: busybox
+  - pvcMatcherName: local-1
+    initContainerName: busybox-chmod
+  - pvcMatcherName: local-2
+    initContainerName: busybox-chown
     mountPathRoot: "/pvc"
 status: {}

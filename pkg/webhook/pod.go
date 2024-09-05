@@ -143,6 +143,7 @@ func (a *Admitter) Decide(ctx context.Context, reqInfo *ReqInfo) *admissionv1.Ad
 				return toV1AdmissionResponse(err)
 			}
 			if pvcInitContainer == nil {
+				klog.Infof("no initContainer found for pvc %s", pvc.Name)
 				continue
 			}
 			if pvcInitContainer.MountPathRoot == "" {
@@ -153,8 +154,10 @@ func (a *Admitter) Decide(ctx context.Context, reqInfo *ReqInfo) *admissionv1.Ad
 
 			// check if the container already exists
 			if slices.Contains(containerNames, container.Name) {
+				klog.Warningf("initContainer %s already exists in pod or patch", container.Name)
 				continue
 			}
+			containerNames = append(containerNames, container.Name)
 
 			mountPath := path.Join(pvcInitContainer.MountPathRoot, volume.Name)
 			volumeMount := corev1.VolumeMount{
@@ -204,6 +207,9 @@ type PVCInitContainer struct {
 	MountPathRoot string
 }
 
+// getPVCInitContainer returns a PVInitContainer that matches the pvc.
+// If pvc does not match any pvcMatcher, nil will be returned.
+// If pvc matches multiple pvcMatchers, the first one will be used and the corresponding initContainer will be returned.
 func (a *Admitter) getPVCInitContainer(ctx context.Context, pvc *corev1.PersistentVolumeClaim, initializerList *v1alpha1.InitializerList) (*PVCInitContainer, error) {
 	getPvcMatcherByName := func(matcherName string, pvcMatchers []v1alpha1.PVCMatcher) *v1alpha1.PVCMatcher {
 		for _, m := range pvcMatchers {
@@ -225,6 +231,7 @@ func (a *Admitter) getPVCInitContainer(ctx context.Context, pvc *corev1.Persiste
 
 	for _, initializer := range initializerList.Items {
 		if !initializer.Spec.Enabled {
+			klog.Infof("initializer %s not enabled", initializer.Name)
 			continue
 		}
 		for _, pvcInitializer := range initializer.Spec.PVCInitializers {
@@ -236,6 +243,7 @@ func (a *Admitter) getPVCInitContainer(ctx context.Context, pvc *corev1.Persiste
 			if match {
 				container := getContainerByName(pvcInitializer.InitContainerName, initializer.Spec.InitContainers)
 				if container == nil {
+					klog.Warningf("initContainer %s not found in initializer %s", pvcInitializer.InitContainerName, initializer.Name)
 					continue
 				}
 				pvcInitContainer := &PVCInitContainer{
