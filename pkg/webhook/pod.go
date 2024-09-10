@@ -88,16 +88,22 @@ func (a *Admitter) Admit(ar admissionv1.AdmissionReview) *admissionv1.AdmissionR
 
 	raw := ar.Request.Object.Raw
 	deserializer := codecs.UniversalDeserializer()
-	pod := &corev1.Pod{}
-	_, _, err := deserializer.Decode(raw, nil, pod)
+	podObj := &corev1.Pod{}
+	obj, _, err := deserializer.Decode(raw, nil, podObj)
 	if err != nil {
 		klog.ErrorS(err, "failed to decode raw object")
 		return toV1AdmissionResponse(err)
 	}
 
+	pod, ok := obj.(*corev1.Pod)
+	if !ok {
+		klog.Infof("object %+v is not a pod", obj)
+		return toV1AdmissionResponseWithPatch(nil)
+	}
+
 	reqInfo := NewReqInfo(pod)
 
-	klog.Infof("request info: %v", reqInfo)
+	klog.Infof("request info: %+v", reqInfo)
 	return a.Decide(context.Background(), reqInfo)
 }
 
