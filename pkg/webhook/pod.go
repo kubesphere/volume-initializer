@@ -87,6 +87,7 @@ func (a *Admitter) Admit(ar admissionv1.AdmissionReview) *admissionv1.AdmissionR
 	}
 
 	raw := ar.Request.Object.Raw
+	namespace := ar.Request.Namespace
 	deserializer := codecs.UniversalDeserializer()
 	podObj := &corev1.Pod{}
 	obj, _, err := deserializer.Decode(raw, nil, podObj)
@@ -100,6 +101,9 @@ func (a *Admitter) Admit(ar admissionv1.AdmissionReview) *admissionv1.AdmissionR
 		klog.Infof("object %+v is not a pod", obj)
 		return toV1AdmissionResponseWithPatch(nil)
 	}
+
+	// the creating pod(Request.Object) may not have name or namespace set, keep that in mind. We need to set it here.
+	pod.Namespace = namespace
 
 	reqInfo := NewReqInfo(pod)
 
@@ -143,7 +147,7 @@ func (a *Admitter) Decide(ctx context.Context, reqInfo *ReqInfo) *admissionv1.Ad
 				return toV1AdmissionResponse(err)
 			}
 			var pvcInitContainer *PVCInitContainer
-			pvcInitContainer, err = a.getPVCInitContainer(ctx, pvc, initializerList)
+			pvcInitContainer, err = a.getPVCInitContainer(ctx, reqInfo, pvc, initializerList)
 			if err != nil {
 				klog.ErrorS(err, "failed to get PVCInitContainer", "pvc", pvc.Name)
 				return toV1AdmissionResponse(err)
@@ -216,7 +220,7 @@ type PVCInitContainer struct {
 // getPVCInitContainer returns a PVInitContainer that matches the pvc.
 // If pvc does not match any pvcMatcher, nil will be returned.
 // If pvc matches multiple pvcMatchers, the first one will be used and the corresponding initContainer will be returned.
-func (a *Admitter) getPVCInitContainer(ctx context.Context, pvc *corev1.PersistentVolumeClaim, initializerList *v1alpha1.InitializerList) (*PVCInitContainer, error) {
+func (a *Admitter) getPVCInitContainer(ctx context.Context, reqInfo *ReqInfo, pvc *corev1.PersistentVolumeClaim, initializerList *v1alpha1.InitializerList) (*PVCInitContainer, error) {
 	getPvcMatcherByName := func(matcherName string, pvcMatchers []v1alpha1.PVCMatcher) *v1alpha1.PVCMatcher {
 		for _, m := range pvcMatchers {
 			if m.Name == matcherName {
@@ -242,7 +246,7 @@ func (a *Admitter) getPVCInitContainer(ctx context.Context, pvc *corev1.Persiste
 		}
 		for _, pvcInitializer := range initializer.Spec.PVCInitializers {
 			pvcMatcher := getPvcMatcherByName(pvcInitializer.PVCMatcherName, initializer.Spec.PVCMatchers)
-			match, err := a.pvcMatch(ctx, pvc, pvcMatcher)
+			match, err := a.pvcMatch(ctx, reqInfo.Pod, pvc, pvcMatcher)
 			if err != nil {
 				return nil, err
 			}
@@ -264,8 +268,22 @@ func (a *Admitter) getPVCInitContainer(ctx context.Context, pvc *corev1.Persiste
 	return nil, nil
 }
 
-func (a *Admitter) pvcMatch(ctx context.Context, pvc *corev1.PersistentVolumeClaim, pvcMatcher *v1alpha1.PVCMatcher) (bool, error) {
+func (a *Admitter) pvcMatch(ctx context.Context, pod *corev1.Pod, pvc *corev1.PersistentVolumeClaim, pvcMatcher *v1alpha1.PVCMatcher) (bool, error) {
 	var err error
+
+	if pvcMatcher.PVC != nil {
+		match := pvcMatcher.PVC.Match(pvc)
+		if !match {
+			return false, nil
+		}
+	}
+
+	if pvcMatcher.Pod != nil {
+		match := pvcMatcher.Pod.Match(pod)
+		if !match {
+			return false, nil
+		}
+	}
 
 	if pvcMatcher.StorageClass != nil && pvc.Spec.StorageClassName != nil {
 		sc := &v1.StorageClass{}

@@ -58,6 +58,12 @@ type PVCMatcher struct {
 	// Name is the matcher name
 	Name string `json:"name,omitempty"`
 
+	// PVC matches the PVC itself
+	PVC *GenericSelector `json:"pvc,omitempty"`
+
+	// Pod matches the pod which mounts the pvc
+	Pod *GenericSelector `json:"pod,omitempty"`
+
 	// StorageClass matches the PVC's storage class
 	StorageClass *GenericSelector `json:"storageClass,omitempty"`
 

@@ -23,6 +23,10 @@ type GenericSelector struct {
 }
 
 func (s *GenericSelector) Match(obj metav1.Object) bool {
+	if obj == nil {
+		return false
+	}
+
 	for _, req := range s.FieldSelector {
 		if req.Key != FieldName && req.Key != FieldNamespace {
 			continue
