@@ -42,6 +42,19 @@ spec:
     imagePullPolicy: IfNotPresent
   pvcMatchers:
   - name: local-1
+    pvc:
+      fieldSelector:
+        - key: name
+          operator: In
+          values:
+            - ttt-mongodb-test-0
+            - mongodb-mongodb-test-0
+    pod:
+      labelSelector:
+        - key: app
+          operator: In
+          values:
+            - mongodb-test
     storageClass:
       fieldSelector:
         - key: name

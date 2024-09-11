@@ -4,7 +4,7 @@ FROM golang:1.22 as builder
 WORKDIR /workspace
 ADD . /workspace/
 
-RUN make -f webhook.mk build-local
+RUN make -f build.mk build-local
 
 # Use distroless as minimal base image to package the manager binary
 # Refer to https://github.com/GoogleContainerTools/distroless for more details
