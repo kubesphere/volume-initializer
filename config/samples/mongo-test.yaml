@@ -2,6 +2,10 @@ kind: StatefulSet
 apiVersion: apps/v1
 metadata:
   name: mongodb-test
+  annotations:
+    volume.storage.kubesphere.io/uid: "0"
+    volume.storage.kubesphere.io/gid: "0"
+    ttt.volume.storage.kubesphere.io/uid: mongodb
   labels:
     app: mongodb-test
 spec:

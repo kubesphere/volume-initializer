@@ -113,6 +113,8 @@ func (a *Admitter) Admit(ar admissionv1.AdmissionReview) *admissionv1.AdmissionR
 
 const (
 	EnvVarPVC1MountPath = "PVC_1_MOUNT_PATH"
+	EnvVarPVC1UID       = "PVC_1_UID"
+	EnvVarPVC1GID       = "PVC_1_GID"
 )
 
 func (a *Admitter) Decide(ctx context.Context, reqInfo *ReqInfo) *admissionv1.AdmissionResponse {
@@ -180,6 +182,23 @@ func (a *Admitter) Decide(ctx context.Context, reqInfo *ReqInfo) *admissionv1.Ad
 				Value: mountPath,
 			}
 			container.Env = append(container.Env, envVarMountPath)
+
+			uid, gid := a.getVolumeUIDGIDFromPodAnnotations(volume.Name, reqInfo.Pod)
+			if uid != "" {
+				envVarUID := corev1.EnvVar{
+					Name:  EnvVarPVC1UID,
+					Value: uid,
+				}
+				container.Env = append(container.Env, envVarUID)
+			}
+			if gid != "" {
+				envVarGID := corev1.EnvVar{
+					Name:  EnvVarPVC1GID,
+					Value: gid,
+				}
+				container.Env = append(container.Env, envVarGID)
+			}
+
 			initContainersToAdd = append(initContainersToAdd, container)
 		}
 	}
@@ -200,7 +219,33 @@ const (
 	podsInitContainerPatch string = `[
 		 {"op":"add","path":"/spec/initContainers","value":%s}
 	]`
+	AnnoVolumeUID         = "volume.storage.kubesphere.io/uid"
+	AnnoVolumeGID         = "volume.storage.kubesphere.io/gid"
+	AnnoSpecificVolumeUID = "%s.volume.storage.kubesphere.io/uid"
+	AnnoSpecificVolumeGID = "%s.volume.storage.kubesphere.io/gid"
 )
+
+func (a *Admitter) getVolumeUIDGIDFromPodAnnotations(volumeName string, pod *corev1.Pod) (uid, gid string) {
+	for k, v := range pod.Annotations {
+		switch k {
+		case AnnoVolumeUID:
+			uid = v
+		case AnnoVolumeGID:
+			gid = v
+		}
+	}
+	for k, v := range pod.Annotations {
+		annoUID := fmt.Sprintf(AnnoSpecificVolumeUID, volumeName)
+		annoGID := fmt.Sprintf(AnnoSpecificVolumeGID, volumeName)
+		switch k {
+		case annoUID:
+			uid = v
+		case annoGID:
+			gid = v
+		}
+	}
+	return
+}
 
 func initContainersToPatch(initContainers []*corev1.Container) ([]byte, error) {
 	containersBytes, err := json.Marshal(initContainers)

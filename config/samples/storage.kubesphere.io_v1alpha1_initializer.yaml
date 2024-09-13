@@ -29,7 +29,7 @@ spec:
     command:
       - sh
       - '-c'
-      - chown -R 1001:0 $PVC_1_MOUNT_PATH
+      - chown -R ${PVC_1_UID}:${PVC_1_GID} $PVC_1_MOUNT_PATH
     resources:
       limits:
         cpu: 500m

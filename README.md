@@ -29,6 +29,16 @@ Create pod with pvc volumes to test.
 
 Take [this](config/samples/mongo-test.yaml) for example.
 
+# Environment Variables
+The following environment variables will be present in the injected init container.
+
+| Environment Variable | Explanation                                                                                                                                          | Present When           | Example Values    |
+|----------------------|------------------------------------------------------------------------------------------------------------------------------------------------------|------------------------|-------------------|
+| PVC_1_MOUNT_PATH     | pvc volume's mount path in the init container                                                                                                        | Always                 | `/data`           |
+| PVC_1_UID            | value from pod's annotation `volume.storage.kubesphere.io/uid` or `${volume-name}.volume.storage.kubesphere.io/uid`, can be used to chown the volume | When annotation exists | `mongodb`, `1001` |
+| PVC_1_GID            | value from pod's annotation `volume.storage.kubesphere.io/gid` or `${volume-name}.volume.storage.kubesphere.io/gid`, can be used to chown the volume | When annotation exists | `0`, `mongodb`    |
+
+
 # Limitations
 - If the pvc matches multiple pvcMatchers and init containers, only the first init container will be injected.
 
