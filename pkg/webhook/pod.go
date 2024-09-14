@@ -183,7 +183,7 @@ func (a *Admitter) Decide(ctx context.Context, reqInfo *ReqInfo) *admissionv1.Ad
 			}
 			container.Env = append(container.Env, envVarMountPath)
 
-			uid, gid := a.getVolumeUIDGIDFromPodAnnotations(volume.Name, reqInfo.Pod)
+			uid, gid := a.getVolumeUIDGIDFromPodLabels(volume.Name, reqInfo.Pod)
 			if uid != "" {
 				envVarUID := corev1.EnvVar{
 					Name:  EnvVarPVC1UID,
@@ -219,24 +219,24 @@ const (
 	podsInitContainerPatch string = `[
 		 {"op":"add","path":"/spec/initContainers","value":%s}
 	]`
-	AnnoVolumeUID         = "volume.storage.kubesphere.io/uid"
-	AnnoVolumeGID         = "volume.storage.kubesphere.io/gid"
-	AnnoSpecificVolumeUID = "%s.volume.storage.kubesphere.io/uid"
-	AnnoSpecificVolumeGID = "%s.volume.storage.kubesphere.io/gid"
+	LabelVolumeUID         = "volume.storage.kubesphere.io/uid"
+	LabelVolumeGID         = "volume.storage.kubesphere.io/gid"
+	LabelSpecificVolumeUID = "%s.volume.storage.kubesphere.io/uid"
+	LabelSpecificVolumeGID = "%s.volume.storage.kubesphere.io/gid"
 )
 
-func (a *Admitter) getVolumeUIDGIDFromPodAnnotations(volumeName string, pod *corev1.Pod) (uid, gid string) {
-	for k, v := range pod.Annotations {
+func (a *Admitter) getVolumeUIDGIDFromPodLabels(volumeName string, pod *corev1.Pod) (uid, gid string) {
+	for k, v := range pod.Labels {
 		switch k {
-		case AnnoVolumeUID:
+		case LabelVolumeUID:
 			uid = v
-		case AnnoVolumeGID:
+		case LabelVolumeGID:
 			gid = v
 		}
 	}
-	for k, v := range pod.Annotations {
-		annoUID := fmt.Sprintf(AnnoSpecificVolumeUID, volumeName)
-		annoGID := fmt.Sprintf(AnnoSpecificVolumeGID, volumeName)
+	for k, v := range pod.Labels {
+		annoUID := fmt.Sprintf(LabelSpecificVolumeUID, volumeName)
+		annoGID := fmt.Sprintf(LabelSpecificVolumeGID, volumeName)
 		switch k {
 		case annoUID:
 			uid = v

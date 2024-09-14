@@ -2,10 +2,6 @@ kind: StatefulSet
 apiVersion: apps/v1
 metadata:
   name: mongodb-test
-  annotations:
-    volume.storage.kubesphere.io/uid: "0"
-    volume.storage.kubesphere.io/gid: "0"
-    ttt.volume.storage.kubesphere.io/uid: mongodb
   labels:
     app: mongodb-test
 spec:
@@ -15,12 +11,14 @@ spec:
       app: mongodb-test
   template:
     metadata:
-      creationTimestamp: null
       labels:
         app: mongodb-test
+        volume.storage.kubesphere.io/uid: "0"
+        volume.storage.kubesphere.io/gid: "0"
+        ttt.volume.storage.kubesphere.io/uid: mongodb
     spec:
       containers:
-        - name: container-tle280
+        - name: mongodb
           image: 'bitnami/mongodb:4.2.4-debian-10-r0'
           ports:
             - name: http-27017
@@ -45,7 +43,6 @@ spec:
       terminationGracePeriodSeconds: 30
       dnsPolicy: ClusterFirst
       serviceAccountName: default
-      serviceAccount: default
       securityContext: {}
       schedulerName: default-scheduler
   volumeClaimTemplates:
@@ -53,7 +50,6 @@ spec:
       apiVersion: v1
       metadata:
         name: ttt
-        creationTimestamp: null
       spec:
         accessModes:
           - ReadWriteOnce
@@ -66,7 +62,6 @@ spec:
       apiVersion: v1
       metadata:
         name: mongodb
-        creationTimestamp: null
       spec:
         accessModes:
           - ReadWriteOnce
