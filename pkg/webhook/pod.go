@@ -331,6 +331,9 @@ func (a *Admitter) pvcMatch(ctx context.Context, pod *corev1.Pod, pvc *corev1.Pe
 	}
 
 	if pvcMatcher.StorageClass != nil && pvc.Spec.StorageClassName != nil {
+		if *pvc.Spec.StorageClassName == "" {
+			return false, nil
+		}
 		sc := &v1.StorageClass{}
 		err = a.client.Get(ctx, types.NamespacedName{Name: *pvc.Spec.StorageClassName}, sc)
 		if err != nil {
@@ -357,6 +360,9 @@ func (a *Admitter) pvcMatch(ctx context.Context, pod *corev1.Pod, pvc *corev1.Pe
 
 	wsName, ok := ns.Labels["kubesphere.io/workspace"]
 	if ok && pvcMatcher.Workspace != nil {
+		if wsName == "" {
+			return false, nil
+		}
 		ws := &tenantv1alpha1.Workspace{}
 		err = a.client.Get(ctx, types.NamespacedName{Name: wsName}, ws)
 		if err != nil {
