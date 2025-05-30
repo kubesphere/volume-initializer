@@ -12,7 +12,7 @@ import (
 	admissionv1 "k8s.io/api/admission/v1"
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/api/storage/v1"
-	"k8s.io/apiextensions-apiserver/pkg/apis/apiextensions"
+	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -106,7 +106,7 @@ func (a *Admitter) Admit(ar admissionv1.AdmissionReview) *admissionv1.AdmissionR
 		return toV1AdmissionResponseWithPatch(nil)
 	}
 
-	crdInitializers := &apiextensions.CustomResourceDefinition{}
+	crdInitializers := &apiextensionsv1.CustomResourceDefinition{}
 	crdInitializersName := types.NamespacedName{
 		Name: "initializers.storage.kubesphere.io",
 	}
