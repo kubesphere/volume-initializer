@@ -12,9 +12,10 @@ require (
 	github.com/onsi/gomega v1.33.1
 	github.com/spf13/cobra v1.8.1
 	k8s.io/api v0.31.0
+	k8s.io/apiextensions-apiserver v0.31.0
 	k8s.io/apimachinery v0.31.0
 	k8s.io/client-go v0.31.0
-	k8s.io/code-generator v0.0.0-20240727175048-b53d16e2b339
+	k8s.io/code-generator v0.31.0
 	k8s.io/klog/v2 v2.130.1
 	kubesphere.io/api v0.0.0-20240509130216-8c539e710f2d
 	sigs.k8s.io/controller-runtime v0.19.0
